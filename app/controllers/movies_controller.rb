@@ -1,4 +1,5 @@
 class MoviesController < ApplicationController
+  helper_method :hilite?, :checked?
 
   def show
     id = params[:id] # retrieve movie ID from URI route
@@ -7,7 +8,13 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @movies = Movie.all
+    @movies = Movie.order(params[:sort]).all
+    @all_ratings = Movie.uniq.pluck(:rating).sort
+    @saved_ratings = params[:ratings]
+    @sort_by = params[:sort]
+
+    saved_ratings_nil?   
+
   end
 
   def new
@@ -36,6 +43,24 @@ class MoviesController < ApplicationController
     @movie.destroy
     flash[:notice] = "Movie '#{@movie.title}' deleted."
     redirect_to movies_path
+  end
+
+  private
+
+  def hilite?(header_name)
+    params[:sort] == (header_name.to_s)? 'hilite':nil
+  end
+
+  def checked?(rating)
+    (@saved_ratings.has_key?(rating) || @saved_ratings == {})? true:false
+  end
+
+  def saved_ratings_nil?
+    if @saved_ratings == nil
+      @saved_ratings = {}
+    else 
+      @movies = Movie.where(:rating => @saved_ratings.keys).order(params[:sort])
+    end
   end
 
 end
