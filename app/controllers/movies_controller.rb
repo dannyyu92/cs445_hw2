@@ -1,5 +1,6 @@
 class MoviesController < ApplicationController
   helper_method :hilite?, :checked?
+  before_filter :persist_sort_session
 
   def show
     id = params[:id] # retrieve movie ID from URI route
@@ -8,12 +9,11 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @movies = Movie.order(params[:sort]).all
+    @movies = Movie.order(session[:sort]).all
     @all_ratings = Movie.uniq.pluck(:rating).sort
     @saved_ratings = params[:ratings]
-    @sort_by = params[:sort]
 
-    saved_ratings_nil?   
+    saved_ratings_nil? 
 
   end
 
@@ -59,8 +59,15 @@ class MoviesController < ApplicationController
     if @saved_ratings == nil
       @saved_ratings = {}
     else 
-      @movies = Movie.where(:rating => @saved_ratings.keys).order(params[:sort])
+      @movies = Movie.where(:rating => @saved_ratings.keys).order(session[:sort])
     end
+  end
+
+  def persist_sort_session
+    if !params[:sort].present?
+      params[:sort] = session[:sort]
+    end
+    session[:sort] = params[:sort]
   end
 
 end
