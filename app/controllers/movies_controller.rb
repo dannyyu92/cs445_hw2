@@ -13,6 +13,7 @@ class MoviesController < ApplicationController
     saved_ratings_nil?
     persist_sort_session
     persist_ratings_session
+    
     @movies = Movie.where(:rating => session[:ratings].keys).order(session[:sort])
   end
 
