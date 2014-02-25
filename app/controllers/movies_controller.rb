@@ -69,7 +69,7 @@ class MoviesController < ApplicationController
 
   def check_empty_ratings
     if @saved_ratings == {}
-      @saved_ratings = {:G => 1, :PG => 1, "PG-13".to_sym => 1, :R => 1}
+      @saved_ratings = {"G" => "1", "PG" => "1", "PG-13" => "1", "R" => "1"}
     end
   end
 
