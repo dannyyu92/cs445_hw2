@@ -1,5 +1,5 @@
 class MoviesController < ApplicationController
-  helper_method :hilite, :checked?
+  helper_method :hilite
 
   def show
     id = params[:id] # retrieve movie ID from URI route
@@ -8,45 +8,16 @@ class MoviesController < ApplicationController
   end
 
   def index
-    #@movies = Movie.all
     @all_ratings = Movie.uniq.pluck(:rating).sort
-    #saved_ratings_nil?
-    #persist_sort_session
-    #persist_ratings_session
-    #big_function
-    #@movies = Movie.where(:rating => session[:ratings].keys).order(session[:sort])
-    #redirect_to movies_path(:rating => session[:ratings], :sort => session[:sort])
 
-    if params[:sort].present?
-      session[:sort] = params[:sort]
-    end
-
-    if params[:ratings].present?
-      session[:ratings] = params[:ratings]
-    end
+    update_sessions
 
     @saved_ratings = params[:ratings] || session[:ratings] || {}
-    checkEmptyRatings
+    check_empty_ratings
 
     @sort = params[:sort] || session[:sort]
 
-    if !params[:sort].present? && !params[:ratings].present? && session[:sort].present? && session[:ratings].present?
-      flash.keep
-      params[:sort] = session[:sort]
-      params[:ratings] = session[:ratings]
-      redirect_to :sort => session[:sort], :ratings => session[:ratings]
-    end
-
-    if !params[:sort].present? && session[:sort] && (params[:ratings].present? || session[:ratings].present?)
-      flash.keep
-      redirect_to :sort => session[:sort], :ratings => @saved_ratings
-    end
-
-    if !params[:ratings].present? && session[:ratings] && (params[:sort].present? || session[:sort].present?)
-      flash.keep
-      redirect_to :sort => @sort, :ratings => session[:ratings]
-    end
-
+    check_for_redirects
 
     @movies = Movie.where(:rating => @saved_ratings.keys).order(@sort)
 
@@ -86,54 +57,38 @@ class MoviesController < ApplicationController
     @sort == (header_name.to_s)? 'hilite':nil
   end
 
-  def checked?(rating)
-    session[:ratings].has_key?(rating.to_sym)
-  end
-
-  def saved_ratings_nil?
-      if !session[:ratings].present?
-        session[:ratings] = {"G" => "1", "PG" => "1", "PG-13" => "1", "R" => "1"}
-      end
-  end
-
-  def persist_sort_session
-    if !params[:sort].present?
-      params[:sort] = session[:sort]
+  def update_sessions
+    if params[:sort].present?
+      session[:sort] = params[:sort]
     end
-    session[:sort] = params[:sort]
-  end
 
-  def persist_ratings_session
-    if (params[:ratings] == {} || !params[:ratings].present?)
-      params[:ratings] = session[:ratings] if session[:ratings].present?
-    else 
+    if params[:ratings].present?
       session[:ratings] = params[:ratings]
     end
   end
 
-  def big_function
-    if (params[:sort].present? != session[:sort] || params[:ratings] != session[:ratings])
-      flash.keep
-      redirect_to :sort => session[:sort], :rating => session[:ratings]
-    end
-
-    if !params[:sort].present?
-      params[:sort] = session[:sort]
-      if (params[:ratings] == {} || !params[:ratings].present?)
-        params[:ratings] = session[:ratings] if session[:ratings].present?
-      else
-        session[:ratings] = params[:ratings]
-      end
-    end
-    session[:sort] = params[:sort]
-    @movies = Movie.where(:rating => session[:ratings].keys).order(session[:sort])
-
-
-  end
-
-  def checkEmptyRatings
+  def check_empty_ratings
     if @saved_ratings == {}
       @saved_ratings = {:G => 1, :PG => 1, "PG-13".to_sym => 1, :R => 1}
+    end
+  end
+
+  def check_for_redirects
+    if !params[:sort].present? && !params[:ratings].present? && session[:sort].present? && session[:ratings].present?
+      flash.keep
+      params[:sort] = session[:sort]
+      params[:ratings] = session[:ratings]
+      redirect_to :sort => session[:sort], :ratings => session[:ratings]
+    end
+
+    if !params[:sort].present? && session[:sort].present? && (params[:ratings].present? || session[:ratings].present?)
+      flash.keep
+      redirect_to :sort => session[:sort], :ratings => @saved_ratings
+    end
+
+    if !params[:ratings].present? && session[:ratings].present? && (params[:sort].present? || session[:sort].present?)
+      flash.keep
+      redirect_to :sort => @sort, :ratings => session[:ratings]
     end
   end
 
