@@ -74,24 +74,24 @@ class MoviesController < ApplicationController
   end
 
   def check_for_redirects
+=begin
     if !params[:sort].present? && !params[:ratings].present? && session[:sort].present? && session[:ratings].present?
       params[:sort] = session[:sort]
       params[:ratings] = session[:ratings]
       flash.keep
       redirect_to :sort => session[:sort], :ratings => session[:ratings]
     end
-
-    if !params[:sort].present? && params[:ratings].present?
-      params[:sort] = session[:sort] if session[:sort].present?
+=end
+    if !params[:sort].present? && session[:sort].present? && (@saved_ratings)
       flash.keep
-      redirect_to :sort => params[:sort], :ratings => @saved_ratings
+      redirect_to :sort => session[:sort], :ratings => @saved_ratings
     end
-
+=begin
     if !params[:ratings].present? && session[:ratings].present? && (params[:sort].present? || session[:sort].present?)
       flash.keep
       redirect_to :sort => @sort, :ratings => session[:ratings]
     end
-
+=end
   end
 
 end
